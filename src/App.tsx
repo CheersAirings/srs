@@ -183,7 +183,6 @@ function App() {
             problems={problemsDueToday}
             onDelete={deleteProblem}
             onRecordAttempt={recordAttempt}
-            showDueOnly={true}
           />
         </TabPanel>
 
