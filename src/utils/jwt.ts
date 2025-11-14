@@ -91,8 +91,8 @@ export async function verifyJwtWithPublicKey(token: string, publicKeyPem: string
 		const validSig = await crypto.subtle.verify(
 			{ name: 'RSASSA-PKCS1-v1_5' },
 			publicKey,
-			signature,
-			signingInput
+			signature as BufferSource,
+			signingInput as BufferSource
 		);
 		if (!validSig) return false;
 		const nowSeconds = Math.floor(Date.now() / 1000);

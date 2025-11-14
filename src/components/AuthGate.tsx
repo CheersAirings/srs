@@ -1,4 +1,5 @@
-import { PropsWithChildren, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { PropsWithChildren } from 'react';
 import { getTokenFromStorage, verifyJwtWithPublicKey } from '../utils/jwt';
 
 const TOKEN_KEY = import.meta.env.VITE_AUTH_TOKEN_KEY || 'token';

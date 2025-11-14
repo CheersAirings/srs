@@ -61,7 +61,6 @@ function App() {
   const [formOpen, setFormOpen] = useState(false);
   const { problems, loading, addProblem, recordAttempt, deleteProblem, reloadProblems } =
     useProblems();
-  const [importError, setImportError] = useState<string | null>(null);
 
   const stats = calculateStats(problems);
   const problemsDueToday = getProblemsDueToday(problems);
@@ -102,8 +101,8 @@ function App() {
       const text = await file.text();
       importFromJsonText(text);
       reloadProblems();
-    } catch (e: any) {
-      setImportError(e?.message || 'Failed to import backup');
+    } catch {
+      // Silently fail import - could add error notification here if needed
     }
   };
 
