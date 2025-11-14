@@ -17,7 +17,7 @@ function calculateNewEaseFactor(
   currentEaseFactor: number,
   quality: number
 ): number {
-  let newEaseFactor =
+  const newEaseFactor =
     currentEaseFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
 
   if (newEaseFactor < MIN_EASE_FACTOR) {
@@ -34,7 +34,6 @@ function calculateNewEaseFactor(
  */
 function calculateNewInterval(
   currentInterval: number,
-  easeFactor: number,
   quality: number
 ): number {
   const success = quality > 0; // quality > 0 means success
@@ -64,7 +63,6 @@ export function updateProblemWithAttempt(
   const newEaseFactor = calculateNewEaseFactor(problem.easeFactor, quality);
   const newInterval = calculateNewInterval(
     problem.interval,
-    newEaseFactor,
     quality
   );
 

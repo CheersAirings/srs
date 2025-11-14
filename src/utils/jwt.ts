@@ -21,7 +21,20 @@ function stringToUint8Array(input: string): Uint8Array {
 	return new TextEncoder().encode(input);
 }
 
-function parseJwt(token: string): { header: any; payload: any; signature: Uint8Array; signingInput: Uint8Array } {
+interface JwtHeader {
+	alg?: string;
+	typ?: string;
+	[key: string]: unknown;
+}
+
+interface JwtPayload {
+	exp?: number;
+	nbf?: number;
+	iat?: number;
+	[key: string]: unknown;
+}
+
+function parseJwt(token: string): { header: JwtHeader; payload: JwtPayload; signature: Uint8Array; signingInput: Uint8Array } {
 	const parts = token.split('.');
 	if (parts.length !== 3) {
 		throw new Error('Invalid JWT format');
@@ -56,7 +69,7 @@ async function importRsaPublicKeyFromPem(pem: string): Promise<CryptoKey> {
 	);
 }
 
-function isTimeClaimsValid(payload: any, nowSeconds: number, skewSeconds: number): boolean {
+function isTimeClaimsValid(payload: JwtPayload, nowSeconds: number, skewSeconds: number): boolean {
 	// exp: expiration time > now - skew
 	if (typeof payload.exp === 'number' && nowSeconds - skewSeconds >= payload.exp) {
 		return false;
