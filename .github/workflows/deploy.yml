@@ -35,6 +35,8 @@ jobs:
         run: npm run build
         env:
           CI: true
+          VITE_JWT_PUBLIC_KEY: ${{ secrets.VITE_JWT_PUBLIC_KEY }}
+          VITE_AUTH_TOKEN_KEY: ${{ secrets.VITE_AUTH_TOKEN_KEY }}
 
       - name: Upload dist artifact
         uses: actions/upload-pages-artifact@v3
