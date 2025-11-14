@@ -1,0 +1,44 @@
+# Auto-detect text files and normalize line endings to LF in repo
+* text=auto eol=lf
+
+# Treat common binary types properly
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.svg text eol=lf
+*.ico binary
+*.pdf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+
+# Improve diffs for common config files
+*.md text
+*.json text
+*.yml text
+*.yaml text
+*.ts text
+*.tsx text
+*.js text
+*.jsx text
+*.css text
+*.scss text
+
+# Lockfiles should be committed; mark as text for consistent diffs
+package-lock.json text
+pnpm-lock.yaml text
+yarn.lock text
+
+# Mark generated assets so code-hosting stats ignore them
+dist/* linguist-generated
+
+# Do not include these when creating archives (e.g., git archive)
+dist/ export-ignore
+node_modules/ export-ignore
+
+
+
+
+
