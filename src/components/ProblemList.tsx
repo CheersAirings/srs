@@ -21,6 +21,7 @@ import {
   OpenInNew,
   CheckCircle,
   Cancel,
+  Edit,
 } from '@mui/icons-material';
 import type { Problem, Attempt } from '../types';
 import { format, isToday, parseISO } from 'date-fns';
@@ -29,6 +30,7 @@ interface ProblemListProps {
   problems: Problem[];
   onDelete: (id: string) => void;
   onRecordAttempt: (id: string, attempt: Omit<Attempt, 'id' | 'date'>) => void;
+  onEdit?: (problem: Problem) => void;
   showDueOnly?: boolean;
   showMasteredOnly?: boolean;
 }
@@ -37,6 +39,7 @@ export default function ProblemList({
   problems,
   onDelete,
   onRecordAttempt,
+  onEdit,
   showDueOnly = false,
   showMasteredOnly = false,
 }: ProblemListProps) {
@@ -173,6 +176,16 @@ export default function ProblemList({
                   >
                     <OpenInNew />
                   </IconButton>
+                  {onEdit && (
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => onEdit(problem)}
+                      title="Edit problem"
+                    >
+                      <Edit />
+                    </IconButton>
+                  )}
                   <Button
                     size="small"
                     variant="contained"

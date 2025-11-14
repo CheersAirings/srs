@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { Problem } from './types';
 import {
   ThemeProvider,
   createTheme,
@@ -59,7 +60,8 @@ function TabPanel(props: TabPanelProps) {
 function App() {
   const [tabValue, setTabValue] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
-  const { problems, loading, addProblem, recordAttempt, deleteProblem, reloadProblems } =
+  const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
+  const { problems, loading, addProblem, updateProblem, recordAttempt, deleteProblem, reloadProblems } =
     useProblems();
 
   const stats = calculateStats(problems);
@@ -76,7 +78,31 @@ function App() {
     difficulty: 'Easy' | 'Medium' | 'Hard',
     category: string
   ) => {
-    addProblem(name, url, difficulty, category);
+    if (editingProblem) {
+      // Update existing problem
+      const updatedProblem: Problem = {
+        ...editingProblem,
+        name,
+        url,
+        difficulty,
+        category,
+      };
+      updateProblem(updatedProblem);
+      setEditingProblem(null);
+    } else {
+      // Add new problem
+      addProblem(name, url, difficulty, category);
+    }
+  };
+
+  const handleEditProblem = (problem: Problem) => {
+    setEditingProblem(problem);
+    setFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setFormOpen(false);
+    setEditingProblem(null);
   };
 
   const handleExport = () => {
@@ -183,6 +209,7 @@ function App() {
             problems={problemsDueToday}
             onDelete={deleteProblem}
             onRecordAttempt={recordAttempt}
+            onEdit={handleEditProblem}
           />
         </TabPanel>
 
@@ -194,6 +221,7 @@ function App() {
             problems={masteredProblems}
             onDelete={deleteProblem}
             onRecordAttempt={recordAttempt}
+            onEdit={handleEditProblem}
             showMasteredOnly={true}
           />
         </TabPanel>
@@ -206,6 +234,7 @@ function App() {
             problems={problems}
             onDelete={deleteProblem}
             onRecordAttempt={recordAttempt}
+            onEdit={handleEditProblem}
           />
         </TabPanel>
       </Container>
@@ -218,15 +247,19 @@ function App() {
           bottom: 16,
           right: 16,
         }}
-        onClick={() => setFormOpen(true)}
+        onClick={() => {
+          setEditingProblem(null);
+          setFormOpen(true);
+        }}
       >
         <Add />
       </Fab>
 
       <ProblemForm
         open={formOpen}
-        onClose={() => setFormOpen(false)}
+        onClose={handleCloseForm}
         onSubmit={handleAddProblem}
+        problem={editingProblem}
       />
     </ThemeProvider>
   );

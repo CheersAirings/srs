@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,7 +9,7 @@ import {
   MenuItem,
   Box,
 } from '@mui/material';
-import type { Difficulty } from '../types';
+import type { Difficulty, Problem } from '../types';
 
 interface ProblemFormProps {
   open: boolean;
@@ -20,6 +20,7 @@ interface ProblemFormProps {
     difficulty: Difficulty,
     category: string
   ) => void;
+  problem?: Problem | null;
 }
 
 const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
@@ -49,12 +50,30 @@ export default function ProblemForm({
   open,
   onClose,
   onSubmit,
+  problem,
 }: ProblemFormProps) {
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty>('Medium');
   const [category, setCategory] = useState('Array');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const isEditMode = !!problem;
+
+  useEffect(() => {
+    if (problem) {
+      setName(problem.name);
+      setUrl(problem.url);
+      setDifficulty(problem.difficulty);
+      setCategory(problem.category);
+    } else {
+      setName('');
+      setUrl('');
+      setDifficulty('Medium');
+      setCategory('Array');
+    }
+    setErrors({});
+  }, [problem, open]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -88,7 +107,7 @@ export default function ProblemForm({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Problem</DialogTitle>
+      <DialogTitle>{isEditMode ? 'Edit Problem' : 'Add New Problem'}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           <TextField
@@ -144,7 +163,7 @@ export default function ProblemForm({
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
         <Button onClick={handleSubmit} variant="contained">
-          Add Problem
+          {isEditMode ? 'Save Changes' : 'Add Problem'}
         </Button>
       </DialogActions>
     </Dialog>
