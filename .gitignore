@@ -60,5 +60,4 @@ dist-ssr
 *.sw?
 .editorconfig
 .gitattributes
-.github
 package-lock.json
