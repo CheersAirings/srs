@@ -5,6 +5,8 @@ import {
   Typography,
   Chip,
   LinearProgress,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
 import {
   Assignment,
@@ -12,21 +14,25 @@ import {
   Schedule,
   TrendingUp,
 } from '@mui/icons-material';
-import type { SRSStats } from '../types';
+import type { ActivityHeatmapMode, SRSStats } from '../types';
 import { addDays, differenceInCalendarDays, endOfWeek, format, startOfWeek } from 'date-fns';
+import { useState } from 'react';
 
 interface DashboardProps {
   stats: SRSStats;
 }
 
 export default function Dashboard({ stats }: DashboardProps) {
+  const [heatmapMode, setHeatmapMode] =
+    useState<ActivityHeatmapMode>('windowYear');
   const masteryPercentage =
     stats.totalProblems > 0
       ? Math.round((stats.masteredProblems / stats.totalProblems) * 100)
       : 0;
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const actualHeatmapStart = new Date(stats.activityHeatmap.startDate);
-  const actualHeatmapEnd = new Date(stats.activityHeatmap.endDate);
+  const activeHeatmap = stats.activityHeatmap[heatmapMode];
+  const actualHeatmapStart = new Date(activeHeatmap.startDate);
+  const actualHeatmapEnd = new Date(activeHeatmap.endDate);
   const calendarStart = startOfWeek(actualHeatmapStart, { weekStartsOn: 1 });
   const calendarEnd = endOfWeek(actualHeatmapEnd, { weekStartsOn: 1 });
   const totalDays = differenceInCalendarDays(calendarEnd, calendarStart) + 1;
@@ -39,7 +45,7 @@ export default function Dashboard({ stats }: DashboardProps) {
       return {
         date,
         iso,
-        count: withinRange ? stats.activityHeatmap.values[iso] ?? 0 : null,
+        count: withinRange ? activeHeatmap.values[iso] ?? 0 : null,
       };
     })
   );
@@ -235,12 +241,36 @@ export default function Dashboard({ stats }: DashboardProps) {
       <Box sx={{ mt: 3 }}>
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Activity Heatmap
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              Daily attempts over the past year. Darker squares mean more activity.
-            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                justifyContent: 'space-between',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 1,
+              }}
+            >
+              <Box>
+                <Typography variant="h6" gutterBottom>
+                  Activity Heatmap
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Daily attempts over the past year. Darker squares mean more activity.
+                </Typography>
+              </Box>
+              <ToggleButtonGroup
+                size="small"
+                value={heatmapMode}
+                exclusive
+                onChange={(_event, mode) =>
+                  setHeatmapMode(mode ?? 'windowYear')
+                }
+                color="primary"
+              >
+                <ToggleButton value="windowYear">Rolling year</ToggleButton>
+                <ToggleButton value="calendarYear">Calendar year</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
             <Box sx={{ mt: 3 }}>
               <Box
                 sx={{

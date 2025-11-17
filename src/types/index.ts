@@ -32,6 +32,8 @@ export interface ActivityHeatmap {
   values: Record<string, number>; // YYYY-MM-DD -> attempt count
 }
 
+export type ActivityHeatmapMode = 'windowYear' | 'calendarYear';
+
 export interface SRSStats {
   totalProblems: number;
   problemsDueToday: number;
@@ -42,7 +44,7 @@ export interface SRSStats {
     Hard: number;
   };
   averageEaseFactor: number;
-  activityHeatmap: ActivityHeatmap;
+  activityHeatmap: Record<ActivityHeatmapMode, ActivityHeatmap>;
 }
 
 
