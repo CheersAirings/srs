@@ -139,18 +139,26 @@ export function isDueToday(problem: Problem): boolean {
 }
 
 /**
- * Check if a problem was attempted today
+ * Count how many attempts were made today
  */
-function wasAttemptedToday(problem: Problem): boolean {
-  if (problem.attempts.length === 0) return false;
+function getAttemptsToday(problem: Problem): number {
+  if (problem.attempts.length === 0) return 0;
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  const lastAttempt = new Date(problem.attempts[problem.attempts.length - 1].date);
-  lastAttempt.setHours(0, 0, 0, 0);
-  
-  return lastAttempt.getTime() === today.getTime();
+  return problem.attempts.filter((attempt) => {
+    const attemptDate = new Date(attempt.date);
+    attemptDate.setHours(0, 0, 0, 0);
+    return attemptDate.getTime() === today.getTime();
+  }).length;
+}
+
+/**
+ * Check if a problem is new (has no attempts)
+ */
+function isNewProblem(problem: Problem): boolean {
+  return problem.attempts.length === 0;
 }
 
 /**
@@ -170,27 +178,51 @@ function getDifficultyPriority(difficulty: Problem['difficulty']): number {
 /**
  * Get problems due today
  * Includes:
- * 1. Problems that are actually due today (not mastered)
- * 2. 2 new problems (no attempts) prioritized by difficulty (Easy -> Medium -> Hard)
- * 3. Problems that were attempted today
+ * 1. Problems that are actually due today (not mastered) that haven't reached their attempt limit:
+ *    - Repeated problems (has previous attempts): show until they have 1 attempt today
+ * 2. New problems (0 total attempts) that haven't reached 2 attempts today:
+ *    - Show up to 2 new problems that haven't been attempted today yet
+ *    - Show new problems that have been attempted today but haven't reached 2 attempts yet
+ *    Prioritized by difficulty (Easy -> Medium -> Hard)
  */
 export function getProblemsDueToday(problems: Problem[]): Problem[] {
   const nonMastered = problems.filter((p) => !p.mastered);
   
-  // 1. Problems actually due today
-  const dueToday = nonMastered.filter((p) => isDueToday(p));
+  // 1. Repeated problems (has previous attempts) that are due today
+  // Show until they have 1 attempt today
+  const repeatedDueToday = nonMastered.filter((p) => {
+    if (isNewProblem(p)) return false; // Skip new problems here
+    if (!isDueToday(p)) return false;
+    
+    const attemptsToday = getAttemptsToday(p);
+    return attemptsToday < 1;
+  });
   
-  // 2. Problems attempted today
-  const attemptedToday = nonMastered.filter((p) => wasAttemptedToday(p));
-  
-  // 3. New problems (no attempts) sorted by difficulty priority
+  // 2. New problems (0 total attempts) that haven't reached 2 attempts today
+  // Prioritize: in-progress new problems (1 attempt today) first, then not attempted today
   const newProblems = nonMastered
-    .filter((p) => p.attempts.length === 0)
-    .sort((a, b) => getDifficultyPriority(a.difficulty) - getDifficultyPriority(b.difficulty))
-    .slice(0, 2);
+    .filter((p) => {
+      if (!isNewProblem(p)) return false;
+      const attemptsToday = getAttemptsToday(p);
+      return attemptsToday < 2; // Show until 2 attempts today
+    })
+    .sort((a, b) => {
+      const aAttemptsToday = getAttemptsToday(a);
+      const bAttemptsToday = getAttemptsToday(b);
+      
+      // Prioritize in-progress problems (1 attempt today) over not attempted
+      if (aAttemptsToday > 0 && bAttemptsToday === 0) return -1;
+      if (aAttemptsToday === 0 && bAttemptsToday > 0) return 1;
+      
+      // Then sort by difficulty (Easy -> Medium -> Hard)
+      return getDifficultyPriority(a.difficulty) - getDifficultyPriority(b.difficulty);
+    });
+  
+  // Limit to 2 new problems total
+  const selectedNewProblems = newProblems.slice(0, 2);
   
   // Combine all and remove duplicates by id
-  const allProblems = [...dueToday, ...attemptedToday, ...newProblems];
+  const allProblems = [...repeatedDueToday, ...selectedNewProblems];
   const uniqueProblems = Array.from(
     new Map(allProblems.map((p) => [p.id, p])).values()
   );
