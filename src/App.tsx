@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Problem } from './types';
 import {
   ThemeProvider,
@@ -13,6 +13,10 @@ import {
   Tab,
   Fab,
   Button,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Chip,
 } from '@mui/material';
 import { Add, Dashboard as DashboardIcon, List, CheckCircle } from '@mui/icons-material';
 import { useProblems } from './hooks/useProblems';
@@ -61,12 +65,35 @@ function App() {
   const [tabValue, setTabValue] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
   const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
+  const [difficultyFilter, setDifficultyFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>(
+    'All'
+  );
+  const [categoryFilter, setCategoryFilter] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const { problems, loading, addProblem, updateProblem, recordAttempt, deleteProblem, reloadProblems } =
     useProblems();
 
   const stats = calculateStats(problems);
   const problemsDueToday = getProblemsDueToday(problems);
   const masteredProblems = getMasteredProblems(problems);
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(new Set(problems.map((problem) => problem.category).filter(Boolean))).sort(),
+    [problems]
+  );
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredAllProblems = problems.filter((problem) => {
+    const matchesDifficulty =
+      difficultyFilter === 'All' || problem.difficulty === difficultyFilter;
+    const matchesCategory = categoryFilter === 'All' || problem.category === categoryFilter;
+    const matchesQuery =
+      normalizedQuery.length === 0 ||
+      [problem.name, problem.url, problem.category].some((field) =>
+        field.toLowerCase().includes(normalizedQuery)
+      );
+    return matchesDifficulty && matchesCategory && matchesQuery;
+  });
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -230,8 +257,70 @@ function App() {
           <Typography variant="h5" gutterBottom>
             All Problems ({problems.length})
           </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              mb: 3,
+            }}
+          >
+            <ToggleButtonGroup
+              value={difficultyFilter}
+              exclusive
+              onChange={(_event, newValue) =>
+                setDifficultyFilter(newValue ?? 'All')
+              }
+              size="small"
+              color="primary"
+            >
+              <ToggleButton value="All">All</ToggleButton>
+              <ToggleButton value="Easy">Easy</ToggleButton>
+              <ToggleButton value="Medium">Medium</ToggleButton>
+              <ToggleButton value="Hard">Hard</ToggleButton>
+            </ToggleButtonGroup>
+
+            {categoryOptions.length > 0 && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                }}
+              >
+                <Chip
+                  label="All Categories"
+                  variant={categoryFilter === 'All' ? 'filled' : 'outlined'}
+                  color={categoryFilter === 'All' ? 'primary' : 'default'}
+                  onClick={() => setCategoryFilter('All')}
+                  size="small"
+                />
+                {categoryOptions.map((category) => (
+                  <Chip
+                    key={category}
+                    label={category}
+                    variant={categoryFilter === category ? 'filled' : 'outlined'}
+                    color={categoryFilter === category ? 'primary' : 'default'}
+                    onClick={() =>
+                      setCategoryFilter((prev) => (prev === category ? 'All' : category))
+                    }
+                    size="small"
+                  />
+                ))}
+              </Box>
+            )}
+
+            <TextField
+              label="Search"
+              placeholder="Search by name, URL, or category"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              fullWidth
+              size="small"
+            />
+          </Box>
           <ProblemList
-            problems={problems}
+            problems={filteredAllProblems}
             onDelete={deleteProblem}
             onRecordAttempt={recordAttempt}
             onEdit={handleEditProblem}
