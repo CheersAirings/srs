@@ -26,6 +26,12 @@ export interface Attempt {
   notes?: string;
 }
 
+export interface ActivityHeatmap {
+  startDate: string; // ISO date string marking the beginning of the window
+  endDate: string; // ISO date string marking the end of the window
+  values: Record<string, number>; // YYYY-MM-DD -> attempt count
+}
+
 export interface SRSStats {
   totalProblems: number;
   problemsDueToday: number;
@@ -36,6 +42,7 @@ export interface SRSStats {
     Hard: number;
   };
   averageEaseFactor: number;
+  activityHeatmap: ActivityHeatmap;
 }
 
 

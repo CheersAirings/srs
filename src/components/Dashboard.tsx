@@ -13,7 +13,7 @@ import {
   TrendingUp,
 } from '@mui/icons-material';
 import type { SRSStats } from '../types';
-import { format } from 'date-fns';
+import { addDays, differenceInCalendarDays, endOfWeek, format, startOfWeek } from 'date-fns';
 
 interface DashboardProps {
   stats: SRSStats;
@@ -24,6 +24,45 @@ export default function Dashboard({ stats }: DashboardProps) {
     stats.totalProblems > 0
       ? Math.round((stats.masteredProblems / stats.totalProblems) * 100)
       : 0;
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const actualHeatmapStart = new Date(stats.activityHeatmap.startDate);
+  const actualHeatmapEnd = new Date(stats.activityHeatmap.endDate);
+  const calendarStart = startOfWeek(actualHeatmapStart, { weekStartsOn: 1 });
+  const calendarEnd = endOfWeek(actualHeatmapEnd, { weekStartsOn: 1 });
+  const totalDays = differenceInCalendarDays(calendarEnd, calendarStart) + 1;
+  const totalWeeks = Math.max(1, Math.ceil(totalDays / 7));
+  const weeks = Array.from({ length: totalWeeks }, (_, weekIdx) =>
+    Array.from({ length: 7 }, (_, dayIdx) => {
+      const date = addDays(calendarStart, weekIdx * 7 + dayIdx);
+      const iso = format(date, 'yyyy-MM-dd');
+      const withinRange = date >= actualHeatmapStart && date <= actualHeatmapEnd;
+      return {
+        date,
+        iso,
+        count: withinRange ? stats.activityHeatmap.values[iso] ?? 0 : null,
+      };
+    })
+  );
+  const counts = weeks
+    .flat()
+    .filter((cell) => cell.count !== null)
+    .map((cell) => cell.count as number);
+  const maxCount = counts.length > 0 ? Math.max(...counts) : 0;
+  const colorScale = ['#ECEFF1', '#C5E1F5', '#90CAF9', '#42A5F5', '#1E88E5'];
+  const getCellColor = (value: number | null) => {
+    if (value === null) {
+      return 'transparent';
+    }
+    if (value === 0 || maxCount === 0) {
+      return colorScale[0];
+    }
+    const level = Math.min(
+      colorScale.length - 1,
+      Math.floor((value / maxCount) * (colorScale.length - 1))
+    );
+    return colorScale[level];
+  };
+  const hasActivity = counts.some((count) => count > 0);
 
   const StatCard = ({
     title,
@@ -194,7 +233,119 @@ export default function Dashboard({ stats }: DashboardProps) {
       </Box>
 
       <Box sx={{ mt: 3 }}>
-        <Typography variant="body2" color="textSecondary">
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Activity Heatmap
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Daily attempts over the past year. Darker squares mean more activity.
+            </Typography>
+            <Box sx={{ mt: 3 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 2,
+                  overflowX: 'auto',
+                  pb: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateRows: 'repeat(7, 14px)',
+                    gap: 0.5,
+                  }}
+                >
+                  {dayLabels.map((label) => (
+                    <Typography
+                      key={label}
+                      variant="caption"
+                      sx={{
+                        height: 14,
+                        lineHeight: '14px',
+                        textTransform: 'uppercase',
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {label}
+                    </Typography>
+                  ))}
+                </Box>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${totalWeeks}, 14px)`,
+                    gridTemplateRows: 'repeat(7, 14px)',
+                    gridAutoFlow: 'column',
+                    gap: 0.5,
+                  }}
+                >
+                  {weeks.map((week, weekIdx) =>
+                    week.map((cell, dayIdx) => (
+                      <Box
+                        key={`${cell.iso}-${weekIdx}-${dayIdx}`}
+                        sx={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: 1,
+                          backgroundColor: getCellColor(cell.count),
+                          border:
+                            cell.count === null
+                              ? '1px solid rgba(0,0,0,0.05)'
+                              : '1px solid transparent',
+                        }}
+                        title={`${format(cell.date, 'MMM d, yyyy')}: ${
+                          cell.count ?? 0
+                        } attempt${cell.count === 1 ? '' : 's'}`}
+                      />
+                    ))
+                  )}
+                </Box>
+              </Box>
+              {!hasActivity && (
+                <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                  No attempts recorded yet. Log activity to populate the heatmap.
+                </Typography>
+              )}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  mt: 2,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <Typography variant="caption">Less</Typography>
+                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                  {colorScale.map((color, idx) => (
+                    <Box
+                      key={`${color}-${idx}`}
+                      sx={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: 1,
+                        backgroundColor: color,
+                        border:
+                          idx === 0 ? '1px solid rgba(0,0,0,0.05)' : '1px solid transparent',
+                      }}
+                    />
+                  ))}
+                </Box>
+                <Typography variant="caption">More</Typography>
+                <Box sx={{ flexGrow: 1 }} />
+                <Typography variant="caption" color="textSecondary">
+                  {format(actualHeatmapStart, 'MMM d, yyyy')} –{' '}
+                  {format(actualHeatmapEnd, 'MMM d, yyyy')}
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
           Last updated: {format(new Date(), 'PPpp')}
         </Typography>
       </Box>
