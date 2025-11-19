@@ -7,6 +7,7 @@ import {
   LinearProgress,
   ToggleButtonGroup,
   ToggleButton,
+  Tooltip,
 } from '@mui/material';
 import {
   Assignment,
@@ -313,24 +314,34 @@ export default function Dashboard({ stats }: DashboardProps) {
                   }}
                 >
                   {weeks.map((week, weekIdx) =>
-                    week.map((cell, dayIdx) => (
-                      <Box
-                        key={`${cell.iso}-${weekIdx}-${dayIdx}`}
-                        sx={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: 1,
-                          backgroundColor: getCellColor(cell.count),
-                          border:
-                            cell.count === null
-                              ? '1px solid rgba(0,0,0,0.05)'
-                              : '1px solid transparent',
-                        }}
-                        title={`${format(cell.date, 'MMM d, yyyy')}: ${
-                          cell.count ?? 0
-                        } attempt${cell.count === 1 ? '' : 's'}`}
-                      />
-                    ))
+                    week.map((cell, dayIdx) => {
+                      const attempts = cell.count ?? 0;
+                      const attemptLabel =
+                        cell.count === null
+                          ? 'Outside selected range'
+                          : `${attempts} attempt${attempts === 1 ? '' : 's'}`;
+                      return (
+                        <Tooltip
+                          key={`${cell.iso}-${weekIdx}-${dayIdx}`}
+                          title={`${format(cell.date, 'MMM d, yyyy')} · ${attemptLabel}`}
+                          arrow
+                          enterTouchDelay={0}
+                        >
+                          <Box
+                            sx={{
+                              width: 14,
+                              height: 14,
+                              borderRadius: 1,
+                              backgroundColor: getCellColor(cell.count),
+                              border:
+                                cell.count === null
+                                  ? '1px solid rgba(0,0,0,0.05)'
+                                  : '1px solid transparent',
+                            }}
+                          />
+                        </Tooltip>
+                      );
+                    })
                   )}
                 </Box>
               </Box>
