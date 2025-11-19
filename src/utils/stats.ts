@@ -60,6 +60,8 @@ function buildHeatmap(
   endDate: Date
 ): { startDate: string; endDate: string; values: Record<string, number> } {
   const values: Record<string, number> = {};
+  const normalizedStart = startOfDay(startDate);
+  const normalizedEnd = endOfDay(endDate);
 
   problems.forEach((problem) => {
     problem.attempts.forEach((attempt) => {
@@ -70,8 +72,8 @@ function buildHeatmap(
       const attemptDay = startOfDay(parsed);
       if (
         isWithinInterval(attemptDay, {
-          start: startDate,
-          end: endDate,
+          start: normalizedStart,
+          end: normalizedEnd,
         })
       ) {
         const key = formatDate(attemptDay, 'yyyy-MM-dd');
@@ -81,33 +83,37 @@ function buildHeatmap(
   });
 
   return {
-    startDate: startDate.toISOString(),
-    endDate: endOfDay(endDate).toISOString(),
+    startDate: normalizedStart.toISOString(),
+    endDate: normalizedEnd.toISOString(),
     values,
   };
 }
 
 function getCalendarYearStart(today: Date): Date {
-  const juneCurrentYear = set(startOfDay(today), { month: 5, date: 1 });
-  if (today >= juneCurrentYear) {
+  const reference = startOfDay(today);
+  const juneCurrentYear = set(reference, { month: 5, date: 1 });
+  if (reference >= juneCurrentYear) {
     return juneCurrentYear;
   }
-  return set(startOfDay(today), {
-    year: today.getFullYear() - 1,
+  return set(reference, {
+    year: reference.getFullYear() - 1,
     month: 5,
     date: 1,
   });
 }
 
 function getCalendarYearEnd(today: Date): Date {
-  const decemberCurrentYear = set(startOfDay(today), { month: 11, date: 31 });
-  const juneCurrentYear = set(startOfDay(today), { month: 5, date: 1 });
-  if (today >= juneCurrentYear) {
-    return decemberCurrentYear;
+  const reference = startOfDay(today);
+  const juneCurrentYear = set(reference, { month: 5, date: 1 });
+  if (reference >= juneCurrentYear) {
+    return set(reference, {
+      year: reference.getFullYear() + 1,
+      month: 4,
+      date: 31,
+    });
   }
-  return set(startOfDay(today), {
-    year: today.getFullYear() - 1,
-    month: 11,
+  return set(reference, {
+    month: 4,
     date: 31,
   });
 }
