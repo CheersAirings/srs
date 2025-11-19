@@ -91,29 +91,16 @@ function buildHeatmap(
 
 function getCalendarYearStart(today: Date): Date {
   const reference = startOfDay(today);
-  const juneCurrentYear = set(reference, { month: 5, date: 1 });
-  if (reference >= juneCurrentYear) {
-    return juneCurrentYear;
-  }
   return set(reference, {
-    year: reference.getFullYear() - 1,
-    month: 5,
+    month: 0,
     date: 1,
   });
 }
 
 function getCalendarYearEnd(today: Date): Date {
   const reference = startOfDay(today);
-  const juneCurrentYear = set(reference, { month: 5, date: 1 });
-  if (reference >= juneCurrentYear) {
-    return set(reference, {
-      year: reference.getFullYear() + 1,
-      month: 4,
-      date: 31,
-    });
-  }
   return set(reference, {
-    month: 4,
+    month: 11,
     date: 31,
   });
 }
