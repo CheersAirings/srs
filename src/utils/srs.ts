@@ -126,6 +126,21 @@ export function createNewProblem(
 }
 
 /**
+ * Move a mastered problem back into the review pool.
+ * Keeps attempt history and ease factor, resets the schedule so the
+ * problem is due today and has to climb back to a 30-day interval.
+ */
+export function returnProblemToReview(problem: Problem): Problem {
+  return {
+    ...problem,
+    mastered: false,
+    status: 'reviewing',
+    interval: 1,
+    nextReviewDate: new Date().toISOString(),
+  };
+}
+
+/**
  * Check if a problem is due for review today
  */
 export function isDueToday(problem: Problem): boolean {

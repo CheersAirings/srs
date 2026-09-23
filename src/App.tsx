@@ -70,8 +70,16 @@ function App() {
   );
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const { problems, loading, addProblem, updateProblem, recordAttempt, deleteProblem, reloadProblems } =
-    useProblems();
+  const {
+    problems,
+    loading,
+    addProblem,
+    updateProblem,
+    recordAttempt,
+    returnToReview,
+    deleteProblem,
+    reloadProblems,
+  } = useProblems();
 
   const stats = calculateStats(problems);
   const problemsDueToday = getProblemsDueToday(problems);
@@ -248,6 +256,7 @@ function App() {
             problems={masteredProblems}
             onDelete={deleteProblem}
             onRecordAttempt={recordAttempt}
+            onReturnToReview={returnToReview}
             onEdit={handleEditProblem}
             showMasteredOnly={true}
           />

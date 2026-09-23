@@ -22,6 +22,7 @@ import {
   CheckCircle,
   Cancel,
   Edit,
+  Replay,
 } from '@mui/icons-material';
 import type { Problem, Attempt } from '../types';
 import { format, isToday, parseISO } from 'date-fns';
@@ -30,6 +31,7 @@ interface ProblemListProps {
   problems: Problem[];
   onDelete: (id: string) => void;
   onRecordAttempt: (id: string, attempt: Omit<Attempt, 'id' | 'date'>) => void;
+  onReturnToReview?: (id: string) => void;
   onEdit?: (problem: Problem) => void;
   showDueOnly?: boolean;
   showMasteredOnly?: boolean;
@@ -39,6 +41,7 @@ export default function ProblemList({
   problems,
   onDelete,
   onRecordAttempt,
+  onReturnToReview,
   onEdit,
   showDueOnly = false,
   showMasteredOnly = false,
@@ -186,14 +189,26 @@ export default function ProblemList({
                       <Edit />
                     </IconButton>
                   )}
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={() => handleRecordAttempt(problem)}
-                    disabled={problem.mastered}
-                  >
-                    Record Attempt
-                  </Button>
+                  {problem.mastered && onReturnToReview ? (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Replay />}
+                      onClick={() => onReturnToReview(problem.id)}
+                      title="Move back to the review pool, due today"
+                    >
+                      Return to Review
+                    </Button>
+                  ) : (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => handleRecordAttempt(problem)}
+                      disabled={problem.mastered}
+                    >
+                      Record Attempt
+                    </Button>
+                  )}
                   <IconButton
                     size="small"
                     color="error"

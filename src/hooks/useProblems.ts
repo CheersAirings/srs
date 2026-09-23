@@ -10,6 +10,7 @@ import {
 import {
   createNewProblem,
   updateProblemWithAttempt,
+  returnProblemToReview,
 } from '../utils/srs';
 
 export function useProblems() {
@@ -52,6 +53,13 @@ export function useProblems() {
     updateProblem(updated);
   };
 
+  const returnToReview = (problemId: string) => {
+    const problem = problems.find((p) => p.id === problemId);
+    if (!problem) return;
+
+    updateProblem(returnProblemToReview(problem));
+  };
+
   const deleteProblem = (problemId: string) => {
     deleteProblemFromStorage(problemId);
     setProblems((prev) => prev.filter((p) => p.id !== problemId));
@@ -73,6 +81,7 @@ export function useProblems() {
     addProblem,
     updateProblem,
     recordAttempt,
+    returnToReview,
     deleteProblem,
     reloadProblems,
     replaceAllProblems,
