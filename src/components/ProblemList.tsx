@@ -51,6 +51,7 @@ export default function ProblemList({
   const [success, setSuccess] = useState(true);
   const [difficultyRating, setDifficultyRating] = useState(3);
   const [notes, setNotes] = useState('');
+  const [problemToDelete, setProblemToDelete] = useState<Problem | null>(null);
 
   const handleRecordAttempt = (problem: Problem) => {
     setSelectedProblem(problem);
@@ -69,6 +70,13 @@ export default function ProblemList({
       });
       setAttemptDialogOpen(false);
       setSelectedProblem(null);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (problemToDelete) {
+      onDelete(problemToDelete.id);
+      setProblemToDelete(null);
     }
   };
 
@@ -212,7 +220,8 @@ export default function ProblemList({
                   <IconButton
                     size="small"
                     color="error"
-                    onClick={() => onDelete(problem.id)}
+                    onClick={() => setProblemToDelete(problem)}
+                    title="Delete problem"
                   >
                     <Delete />
                   </IconButton>
@@ -287,6 +296,27 @@ export default function ProblemList({
           <Button onClick={() => setAttemptDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleSubmitAttempt} variant="contained">
             Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={problemToDelete !== null}
+        onClose={() => setProblemToDelete(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete problem?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            "{problemToDelete?.name}" and its attempt history will be removed
+            permanently. This cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setProblemToDelete(null)}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
